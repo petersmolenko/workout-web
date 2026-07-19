@@ -6,8 +6,8 @@
 ## Запуск
 
 1. Сервер:   `cd server && source .venv/bin/activate && uvicorn main:app`
-2. Приложение: открой `app/dist/index.html` двойным кликом
-   (или для разработки: `cd app && npm install && npm run dev`)
+2. Приложение: открой `web/dist/index.html` двойным кликом
+   (или для разработки: `cd web && npm install && npm run dev`)
 
 Если сервер не запущен, приложение честно скажет об этом и перейдёт в
 режим просмотра: история из JSON, зашитого в бандл на момент сборки

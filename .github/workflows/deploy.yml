@@ -1,9 +1,9 @@
 # CI/CD приложения: push в main → на VPS обновляется и пересобирается
-# ТОЛЬКО контейнер app (сервер не трогаем).
+# ТОЛЬКО контейнер web (сервер не трогаем).
 #
 # Секреты репозитория (Settings → Secrets and variables → Actions):
 #   VPS_HOST, VPS_USER, VPS_SSH_KEY
-name: Deploy app
+name: Deploy web
 
 on:
   push:
@@ -21,6 +21,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script_stop: true
           script: |
-            cd /opt/workout/app && git pull --ff-only
-            cd /opt/workout && docker compose up -d --build app
+            cd /opt/workout/web && git pull --ff-only
+            cd /opt/workout && docker compose up -d --build web
             docker image prune -f
