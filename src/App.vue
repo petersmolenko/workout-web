@@ -131,7 +131,7 @@ async function onCreated(w: Workout) {
 
 <template>
   <div class="wrap">
-    <h1>Тренировки</h1>
+    <h1>WORKOUT</h1>
     <div class="sub">
       <template v-if="mode === 'api'">API: {{ }}подключено · {{ list.length }} тренировок</template>
       <template v-else-if="mode === 'local'">
