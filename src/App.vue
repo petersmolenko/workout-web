@@ -9,7 +9,6 @@
  *            (данные на момент сборки).
  */
 import { ref, computed, watch, onMounted } from "vue";
-import workoutsData from "./data/workouts.json";
 import exercisesData from "./data/exercises.json";
 import type { WorkoutsFile, ExerciseDictionary, ExerciseDef, Workout } from "./types";
 import { allExercises, matchQuery } from "./utils";
@@ -18,7 +17,15 @@ import WorkoutCard from "./components/WorkoutCard.vue";
 import DictPanel from "./components/DictPanel.vue";
 import NewWorkoutForm from "./components/NewWorkoutForm.vue";
 
-const LOCAL = workoutsData as unknown as WorkoutsFile;
+// Локальная история (~1.5 МБ) НЕ вшивается в основной бандл, а грузится
+// отдельным чанком только когда сервер недоступен (режим local). В Docker
+// с рабочим API этот файл вообще не скачивается - критический JS остаётся
+// лёгким и не «висит» в pending на медленной сети / низком MTU.
+let LOCAL: WorkoutsFile | null = null;
+async function ensureLocal(): Promise<WorkoutsFile> {
+  if (!LOCAL) LOCAL = (await import("./data/workouts.json")).default as unknown as WorkoutsFile;
+  return LOCAL;
+}
 const LOCAL_DICT = exercisesData as unknown as ExerciseDictionary;
 
 const mode = ref<"checking" | "api" | "local">("checking");
@@ -42,9 +49,9 @@ const years = computed(() => {
 });
 
 // ---------- загрузка списка ----------
-function localList(): api.WorkoutSummary[] {
+function localList(local: WorkoutsFile): api.WorkoutSummary[] {
   const q = query.value.trim().toLowerCase();
-  return LOCAL.workouts
+  return local.workouts
     .filter(w => {
       if (year.value && !w.date.startsWith(year.value)) return false;
       if (group.value) {
@@ -79,7 +86,7 @@ async function reload() {
       error.value = `Ошибка API: ${(e as Error).message}`;
     }
   } else {
-    list.value = localList();
+    list.value = localList(await ensureLocal());
   }
 }
 
@@ -106,7 +113,7 @@ async function toggle(id: string) {
       try { details.value[id] = await api.getWorkout(id); }
       catch (e) { error.value = `Ошибка API: ${(e as Error).message}`; return; }
     } else {
-      const w = LOCAL.workouts.find(w => w.id === id);
+      const w = (await ensureLocal()).workouts.find(w => w.id === id);
       if (w) details.value[id] = w;
     }
   }
